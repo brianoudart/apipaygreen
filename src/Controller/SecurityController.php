@@ -26,9 +26,9 @@ class SecurityController extends AbstractController
         $values = json_decode($request->getContent());
         if(isset($values->email,$values->password)) {
             $user = new User();
-            $user->setEmail($values->username);
+            $user->setEmail($values->email);
             $user->setPassword($passwordEncoder->encodePassword($user, $values->password));
-            $user->setRoles($user->getRoles());
+            $user->setRoles("ROLE_USER");
             $entityManager->persist($user);
             $entityManager->flush();
 
@@ -65,7 +65,9 @@ class SecurityController extends AbstractController
     public function list(UserRepository $userRepository, NormalizerInterface $normalizer)
     {
         $users = $userRepository->findAll();
-        $result = $normalizer->normalize($users);
+        $result = $normalizer->normalize($users, null, [
+            'groups' => 'user:read'
+        ]);
         $json = json_encode($result);
         return new Response($json, 200, [
             "content-type" => "application/json"
